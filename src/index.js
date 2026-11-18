@@ -1,1 +1,14 @@
 import "./styles.css";
+import todoManager from "./todoManager.js";
+import { loadData } from "./storage.js";
+import { renderApp } from "./dom.js";
+
+const savedData = loadData();
+
+if (savedData) {
+    todoManager.loadData(savedData);
+} else {
+    todoManager.initializeDefaultProject();
+}
+
+renderApp();
