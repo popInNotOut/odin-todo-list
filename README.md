@@ -7,7 +7,7 @@ track completion, and persist data across browser sessions.
 
 ## Live Demo
 
-[View Live Demo](https://popInNotOut.github.io/todo-list/)
+[View Live Demo](https://popInNotOut.github.io/odin-todo-list/)
 
 ## Features
 
@@ -59,7 +59,7 @@ persistence.
 Clone the repository:
 
 ```bash
-git clone https://github.com/popInNotOut/todo-list.git
+git clone https://github.com/popInNotOut/odin-todo-list.git
 cd todo-list
 ```
 
