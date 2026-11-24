@@ -78,6 +78,12 @@ npm start
 Create a production build:
 
 ```bash
+npm run build
+```
+
+Deploy to GitHub Pages:
+
+```bash
 npm run deploy
 ```
 
