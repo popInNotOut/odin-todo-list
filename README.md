@@ -60,7 +60,7 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/popInNotOut/odin-todo-list.git
-cd todo-list
+cd odin-todo-list
 ```
 
 Install dependencies:
