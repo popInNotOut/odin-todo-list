@@ -201,3 +201,308 @@ document
       button.closest("dialog").close();
     });
   });
+
+function createTodoCard(todo) {
+  const card = createElement("article", {
+    className: "todo-card",
+    attributes: {
+      "data-todo-id": todo.id,
+    },
+  });
+
+  card.classList.add(`priority-${todo.priority}`);
+
+  if (todo.completed) {
+    card.classList.add("completed");
+  }
+
+  const completionCheckbox = createElement("input", {
+    attributes: {
+      type: "checkbox",
+      "data-action": "toggle",
+      "aria-label": `Mark ${todo.title} complete`,
+    },
+  });
+
+  completionCheckbox.checked = todo.completed;
+
+  const content = createElement("button", {
+    className: "todo-card-content",
+    attributes: {
+      type: "button",
+      "data-action": "details",
+    },
+  });
+
+  const title = createElement("h3", {
+    text: todo.title,
+  });
+
+  const dueDate = createElement("p", {
+    className: "todo-due-date",
+    text: formatTodoDate(todo.dueDate),
+  });
+
+  content.append(title, dueDate);
+
+  const actions = createElement("div", {
+    className: "todo-actions",
+  });
+
+  const editButton = createElement("button", {
+    text: "Edit",
+    attributes: {
+      type: "button",
+      "data-action": "edit",
+    },
+  });
+
+  const deleteButton = createElement("button", {
+    text: "Delete",
+    attributes: {
+      type: "button",
+      "data-action": "delete",
+    },
+  });
+
+  actions.append(editButton, deleteButton);
+
+  card.append(
+    completionCheckbox,
+    content,
+    actions,
+  );
+
+  return card;
+}
+
+function formatTodoDate(dateString) {
+  if (!dateString) {
+    return "No due date";
+  }
+
+  try {
+    return format(
+      parseISO(dateString),
+      "MMM d, yyyy",
+    );
+  } catch {
+    return dateString;
+  }
+}
+
+function renderTodos() {
+  todoList.replaceChildren();
+
+  const selectedProject =
+    todoManager.getSelectedProject();
+
+  if (!selectedProject) {
+    currentProjectTitle.textContent =
+      "No project selected";
+    return;
+  }
+
+  currentProjectTitle.textContent =
+    selectedProject.name;
+
+  if (selectedProject.todos.length === 0) {
+    const emptyMessage = createElement("p", {
+      className: "empty-message",
+      text: "There are no todos in this project.",
+    });
+
+    todoList.append(emptyMessage);
+    return;
+  }
+
+  selectedProject.todos.forEach((todo) => {
+    todoList.append(createTodoCard(todo));
+  });
+}
+
+document
+  .querySelector("#open-todo-form")
+  .addEventListener("click", () => {
+    todoForm.reset();
+    todoIdInput.value = "";
+    todoFormTitle.textContent = "Create Todo";
+    todoPriorityInput.value = "medium";
+
+    todoDialog.showModal();
+    todoTitleInput.focus();
+  });
+
+function getTodoFormData() {
+  return {
+    title: todoTitleInput.value.trim(),
+    description:
+      todoDescriptionInput.value.trim(),
+    dueDate: todoDueDateInput.value,
+    priority: todoPriorityInput.value,
+    notes: todoNotesInput.value.trim(),
+  };
+}
+
+todoForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const todoData = getTodoFormData();
+  const editingTodoId = todoIdInput.value;
+
+  if (!todoData.title) {
+    window.alert("Please enter a todo title.");
+    return;
+  }
+
+  if (editingTodoId) {
+    todoManager.updateTodo(
+      editingTodoId,
+      todoData,
+    );
+  } else {
+    todoManager.addTodo(todoData);
+  }
+
+  todoDialog.close();
+  todoForm.reset();
+  saveAndRender();
+});
+
+todoList.addEventListener("click", (event) => {
+  const card = event.target.closest("[data-todo-id]");
+
+  if (!card) {
+    return;
+  }
+
+  const todoId = card.dataset.todoId;
+  const actionElement = event.target.closest(
+    "[data-action]",
+  );
+
+  if (!actionElement) {
+    return;
+  }
+
+  const action = actionElement.dataset.action;
+
+  if (action === "toggle") {
+    todoManager.toggleTodo(todoId);
+    saveAndRender();
+  }
+
+  if (action === "details") {
+    openTodoDetails(todoId);
+  }
+
+  if (action === "edit") {
+    openTodoEditForm(todoId);
+  }
+
+  if (action === "delete") {
+    deleteTodo(todoId);
+  }
+});
+
+function openTodoDetails(todoId) {
+  const todo = todoManager.getTodo(todoId);
+
+  if (!todo) {
+    return;
+  }
+
+  todoDetails.replaceChildren();
+
+  const title = createElement("h2", {
+    text: todo.title,
+  });
+
+  const description = createElement("p", {
+    text:
+      todo.description || "No description provided.",
+  });
+
+  const dueDate = createElement("p", {
+    text: `Due: ${formatTodoDate(todo.dueDate)}`,
+  });
+
+  const priority = createElement("p", {
+    text: `Priority: ${capitalize(todo.priority)}`,
+  });
+
+  const status = createElement("p", {
+    text: `Status: ${
+      todo.completed ? "Complete" : "Incomplete"
+    }`,
+  });
+
+  const notes = createElement("p", {
+    text: todo.notes || "No notes provided.",
+  });
+
+  todoDetails.append(
+    title,
+    description,
+    dueDate,
+    priority,
+    status,
+    notes,
+  );
+
+  detailsDialog.showModal();
+}
+
+function capitalize(value) {
+  return (
+    value.charAt(0).toUpperCase() + value.slice(1)
+  );
+}
+
+function openTodoEditForm(todoId) {
+  const todo = todoManager.getTodo(todoId);
+
+  if (!todo) {
+    return;
+  }
+
+  todoFormTitle.textContent = "Edit Todo";
+
+  todoIdInput.value = todo.id;
+  todoTitleInput.value = todo.title;
+  todoDescriptionInput.value = todo.description;
+  todoDueDateInput.value = todo.dueDate;
+  todoPriorityInput.value = todo.priority;
+  todoNotesInput.value = todo.notes;
+
+  todoDialog.showModal();
+}
+
+function deleteTodo(todoId) {
+  const todo = todoManager.getTodo(todoId);
+
+  if (!todo) {
+    return;
+  }
+
+  const shouldDelete = window.confirm(
+    `Delete "${todo.title}"?`,
+  );
+
+  if (!shouldDelete) {
+    return;
+  }
+
+  todoManager.deleteTodo(todoId);
+  saveAndRender();
+}
+
+export function renderApp() {
+  renderProjects();
+  renderTodos();
+}
+
+function saveAndRender() {
+  saveData(todoManager);
+  renderApp();
+}
