@@ -198,6 +198,9 @@ dialog select {
     color: #6b7280;
 }
 
+
+
+
 @media (max-width: 700px) {
     .app {
         grid-template-columns: 1fr;
